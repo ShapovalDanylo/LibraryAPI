@@ -1,11 +1,13 @@
 ﻿using Library.Data;
 using Library.Interfaces;
 using Library.Models;
+using Library.RequestEntities;
+using Library.ResponseEntities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Library.Repositories
 {
-    public class BookRepository : IBook
+    public class BookRepository : IBookRepository
     {
         private readonly DataContext _context;
 
@@ -16,62 +18,54 @@ namespace Library.Repositories
 
         public ICollection<Book> GetBooks()
         {
-            return _context.Books
-                .Include(b => b.Library)
-                .OrderBy(b => b.Id).ToList();
+            return _context.Books.OrderBy(b => b.Id).ToList();
         }
 
         public Book GetBookById(int id)
         {
-            return _context.Books
-                    .Include(b => b.Library)
-                    .FirstOrDefault(b => b.Id == id);
+            return _context.Books.FirstOrDefault(b => b.Id == id);
         }
 
-        public Book AddBook(Book book)
+        public Book AddBook(BookRequestShema book)
         {
-            var existingBook = _context.Books
-                                .Include(b => b.Library)
-                                .FirstOrDefault(b => b.Id == book.Id);
+            var library = _context.Libraries
+                .Include(l => l.Books)
+                .FirstOrDefault(l => l.Id == book.LibraryId);
 
-            var existingLibrary = _context.Libraries.FirstOrDefault(l => l.Id == book.Library.Id && l.Name == book.Library.Name);
-
-            if (existingLibrary == null)
+            if (library == null)
             {
                 throw new InvalidOperationException("Library doesn't exist!");
-            } 
-            else
-            {
-                book.Library = existingLibrary;
             }
 
-            if (existingBook != null)
+            if (library.Books.Any(b => b.Title == book.Title && b.Author == book.Author && b.Year == book.Year))
             {
-                existingBook.Title = book.Title;
-                existingBook.Author = book.Author;
-                existingBook.Year = book.Year;
-                existingBook.Library = existingLibrary;
-            } 
-            else
-            {
-                _context.Books.Add(book);
+                throw new InvalidOperationException("The book is already in the library!");
             }
+
+            Book createdBook = new Book()
+            {
+                Title = book.Title,
+                Author = book.Author,
+                Year = book.Year,
+                LibraryId = library.Id,
+                Library = library
+            };
+
+            _context.Books.Add(createdBook);
             _context.SaveChanges();
 
-            return book;
+            return createdBook;
         }
 
         public Book DeleteBook(int id)
         {
-            var bookToDelete = _context.Books
-                                .Include(b => b.Library)
-                                .FirstOrDefault(b => b.Id == id);
+            Book bookToDelete = _context.Books.FirstOrDefault(b => b.Id == id);
 
-            if (bookToDelete != null)
-            {
-                _context.Books.Remove(bookToDelete);
-                _context.SaveChanges();
-            }
+            if (bookToDelete == null)
+                return null;
+
+            _context.Books.Remove(bookToDelete);
+            _context.SaveChanges();
 
             return bookToDelete;
         }

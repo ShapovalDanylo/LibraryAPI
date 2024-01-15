@@ -1,12 +1,13 @@
-﻿using Library.Models;
+﻿using Library.RequestEntities;
+using Library.Models;
 
 namespace Library.Interfaces
 {
-    public interface IBook
+    public interface IBookRepository
     {
         ICollection<Book> GetBooks();
         Book GetBookById(int id);
-        Book AddBook(Book book);
+        Book AddBook(BookRequestShema book);
         Book DeleteBook(int id);
     }
 }

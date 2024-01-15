@@ -15,8 +15,8 @@ builder.Services.AddCors(options =>
 ));
 
 builder.Services.AddControllers();
-builder.Services.AddScoped<ILibrary, LibraryRepository>();
-builder.Services.AddScoped<IBook, BookRepository>();
+builder.Services.AddScoped<ILibraryRepository, LibraryRepository>();
+builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
@@ -24,6 +24,7 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Library API", Version = "v1" });
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+    options.EnableAnnotations();
 });
 
 builder.Services.AddDbContext<DataContext>(options => {

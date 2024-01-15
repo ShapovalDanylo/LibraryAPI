@@ -1,6 +1,8 @@
 ﻿using Library.Interfaces;
-using Library.Models;
+using Library.RequestEntities;
+using Library.ResponseEntities;
 using Microsoft.AspNetCore.Mvc;
+using Library.Models;
 
 namespace Library.Controllers
 {
@@ -8,9 +10,9 @@ namespace Library.Controllers
     [ApiController]
     public class BookController : ControllerBase
     {
-        private readonly IBook _bookInterface;
+        private readonly IBookRepository _bookInterface;
 
-        public BookController(IBook bookInterface)
+        public BookController(IBookRepository bookInterface)
         {
             _bookInterface = bookInterface;
         }
@@ -19,35 +21,58 @@ namespace Library.Controllers
         /// Gets all Books
         /// </summary>
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(ICollection<Book>))]
+        [ProducesResponseType(200, Type = typeof(ICollection<BookResponseShema>))]
         public IActionResult GetBooks()
         {
-            var books = _bookInterface.GetBooks();
+            ICollection<Book> books = _bookInterface.GetBooks();
 
-            return Ok(books);
+            ICollection<BookResponseShema> response = new List<BookResponseShema>();
+
+            foreach (var book in books)
+            {
+                response.Add(new BookResponseShema
+                {
+                    Id = book.Id,
+                    Title = book.Title,
+                    Author = book.Author,
+                    Year = book.Year,
+                    LibraryId = book.LibraryId,
+                });
+            }
+
+            return Ok(response);
         }
 
         /// <summary>
         /// Gets Book by id
         /// </summary>
         [HttpGet("{id}")]
-        [ProducesResponseType(200, Type = typeof(Book))]
+        [ProducesResponseType(200, Type = typeof(BookResponseShema))]
         public IActionResult GetBookById(int id)
         {
-            var book = _bookInterface.GetBookById(id);
+            Book book = _bookInterface.GetBookById(id);
 
             if (book == null)
                 return NotFound();
 
-            return Ok(book);
+            BookResponseShema response = new BookResponseShema()
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                Year = book.Year,
+                LibraryId = book.LibraryId,
+            };
+
+            return Ok(response);
         }
 
         /// <summary>
         /// Creates a Book
         /// </summary>
         [HttpPost]
-        [ProducesResponseType(201, Type = typeof(Book))]
-        public ActionResult<Book> AddBook([FromBody] Book book)
+        [ProducesResponseType(201, Type = typeof(BookResponseShema))]
+        public ActionResult<BookResponseShema> AddBook([FromBody] BookRequestShema book)
         {
             try
             {
@@ -56,7 +81,16 @@ namespace Library.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                return Ok(createdBook);
+                BookResponseShema response = new BookResponseShema()
+                {
+                    Id = createdBook.Id,
+                    Title = book.Title,
+                    Author = book.Author,
+                    Year = book.Year,
+                    LibraryId = book.LibraryId
+                };
+
+                return Ok(response);
             }
             catch (InvalidOperationException ex)
             {
@@ -68,15 +102,24 @@ namespace Library.Controllers
         /// Deletes a Book
         /// </summary>
         [HttpDelete("{id}")]
-        [ProducesResponseType(202, Type = typeof(Book))]
-        public ActionResult<Book> DeleteBook(int id)
+        [ProducesResponseType(202, Type = typeof(BookResponseShema))]
+        public ActionResult<BookResponseShema> DeleteBook(int id)
         {
             Book deletedBook = _bookInterface.DeleteBook(id);
 
             if (deletedBook == null)
                 return NotFound();
 
-            return Ok(deletedBook);
+            BookResponseShema response = new BookResponseShema()
+            {
+                Id = deletedBook.Id,
+                Title = deletedBook.Title,
+                Author = deletedBook.Author,
+                Year = deletedBook.Year,
+                LibraryId = deletedBook.LibraryId
+            };
+
+            return Ok(response);
         }
     }
 }

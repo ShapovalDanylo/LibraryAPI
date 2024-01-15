@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Library.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240111125251_InitialCreate")]
+    [Migration("20240114221014_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -73,12 +73,17 @@ namespace Library.Migrations
             modelBuilder.Entity("Library.Models.Book", b =>
                 {
                     b.HasOne("Library.Models.Library", "Library")
-                        .WithMany()
+                        .WithMany("Books")
                         .HasForeignKey("LibraryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Library");
+                });
+
+            modelBuilder.Entity("Library.Models.Library", b =>
+                {
+                    b.Navigation("Books");
                 });
 #pragma warning restore 612, 618
         }
